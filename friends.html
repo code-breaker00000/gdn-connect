@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF‑8" />
+  <meta name="viewport" content="width=device-width, initial‑scale=1.0"/>
+  <title>Amis – GDN‑Connect</title>
+  <link rel="stylesheet" href="styles.css"/>
+
+  <!-- Firebase Compat -->
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Amis – GDN‑Connect</h1>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="chat.html">Chat</a>
+      <a href="friends.html">Amis</a>
+      <a href="blog.html">Blog</a>
+      <a href="profile.html">Profil</a>
+      <a href="admin.html">soutien</a>
+      <button id="logoutBtn">Déconnexion</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="search-section">
+      <input type="text" id="searchInput" placeholder="Rechercher un utilisateur..." />
+      <button id="searchBtn">🔎 Rechercher</button>
+    </section>
+
+    <section class="results-section">
+      <h2>Résultats</h2>
+      <div id="results"></div>
+    </section>
+
+    <section class="friends-section">
+      <h2>Mes Amis</h2>
+      <div id="friendsList"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 GDN‑Connect</p>
+  </footer>
+
+<script>
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const rtdb = firebase.database();
+  let currentUser = null;
+
+  auth.onAuthStateChanged(user => {
+    if (!user) return window.location.href = "index.html";
+    currentUser = user;
+    refreshFriends();
+    setupSearch();
+    setupPresence();
+  });
+
+  document.getElementById("logoutBtn").onclick = () => auth.signOut().then(() => {
+    rtdb.ref('presence/' + currentUser.uid).remove();
+    window.location.href = "index.html";
+  });
+
+  // Présence utilisateur (en ligne)
+  function setupPresence() {
+    const presenceRef = rtdb.ref('presence/' + currentUser.uid);
+    presenceRef.set(true);
+    presenceRef.onDisconnect().remove();
+  }
+
+  // Rechercher des utilisateurs
+  function setupSearch() {
+    const input = document.getElementById("searchInput");
+    const btn = document.getElementById("searchBtn");
+    btn.onclick = () => {
+      const term = input.value.trim().toLowerCase();
+      if (!term) return;
+      db.collection('users').get().then(qs => {
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = '';
+        qs.forEach(doc => {
+          const u = doc.data();
+          if (doc.id === currentUser.uid) return;
+          const name = (u.prenom + ' ' + u.nom).toLowerCase();
+          if (!name.includes(term)) return;
+
+          const div = document.createElement('div');
+          div.classList.add('user-item');
+          div.innerHTML = `
+            <strong>${u.prenom} ${u.nom}</strong>
+            <button class="btn-view">Voir profil</button>
+            <button class="btn-add">Ajouter en ami</button>
+            <span class="status" id="status-${doc.id}">⋯</span>
+          `;
+          resultsDiv.appendChild(div);
+
+          div.querySelector('.btn-view').onclick = () => {
+            window.location.href = `profile.html?user=${doc.id}`;
+          };
+          div.querySelector('.btn-add').onclick = () => {
+            addFriend(doc.id);
+          };
+          // afficher présence
+          rtdb.ref('presence/' + doc.id).on('value', snap => {
+            const s = document.getElementById('status-' + doc.id);
+            s.textContent = snap.exists() ? '🟢' : '⚪';
+          });
+        });
+      });
+    };
+  }
+
+  // Ajouter ami
+  function addFriend(friendId) {
+    const fcol = db.collection('users').doc(currentUser.uid).collection('friends');
+    fcol.doc(friendId).set({ since: firebase.firestore.FieldValue.serverTimestamp() }).then(refreshFriends);
+  }
+
+  // Rafraîchir liste d'amis
+  function refreshFriends() {
+    const fl = document.getElementById("friendsList");
+    fl.innerHTML = '';
+    db.collection('users').doc(currentUser.uid).collection('friends').get().then(qs => {
+      qs.forEach(doc => {
+        const fid = doc.id;
+        db.collection('users').doc(fid).get().then(uDoc => {
+          if (!uDoc.exists) return;
+          const u = uDoc.data();
+          const div = document.createElement('div');
+          div.classList.add('friend-item');
+          div.innerHTML = `
+            <strong>${u.prenom} ${u.nom}</strong>
+            <button class="btn-chat">Chat</button>
+            <span class="status" id="friend-status-${fid}">⋯</span>
+          `;
+          fl.appendChild(div);
+          div.querySelector('.btn-chat').onclick = () => {
+            window.location.href = `chat.html?friendId=${fid}`;
+          };
+          rtdb.ref('presence/' + fid).on('value', snap => {
+            document.getElementById('friend-status-'+fid).textContent = snap.exists() ? '🟢' : '⚪';
+          });
+        });
+      });
+    });
+  }
+</script>
+</body>
+</html>

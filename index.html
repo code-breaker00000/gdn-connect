@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GDN-Connect</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>Bienvenue sur GDN-Connect</h1>
+  <nav id="main-nav" style="display:none">
+    <a href="#.html">Dashboard</a>
+    <a href="#.html">Chat</a>
+    <a href="#.html">Amis</a>
+    <a href="#.html">Blog</a>
+    <a href="#.html">Profil</a>
+    <a href="#.html">Admin</a>
+  </nav>
+</header>
+
+<main>
+  <section>
+    <h2>Connexion / Inscription</h2>
+    <div id="auth-section">
+      <!-- Connexion -->
+      <div class="auth-box">
+        <h3>Connexion</h3>
+        <input type="email" id="login-email" placeholder="Email">
+        <input type="password" id="login-password" placeholder="Mot de passe">
+        <button id="login-btn">Se connecter</button>
+      </div>
+
+      <!-- Inscription -->
+      <div class="auth-box">
+        <h3>Inscription</h3>
+        <input type="text" id="register-nom" placeholder="Nom">
+        <input type="text" id="register-prenom" placeholder="Prénom">
+        <input type="number" id="register-age" placeholder="Âge">
+        <input type="date" id="register-naissance">
+        <input type="text" id="register-classe" placeholder="Classe">
+        <select id="register-relation">
+          <option value="celibataire">Célibataire</option>
+          <option value="couple">En couple</option>
+        </select>
+        <select id="register-genre">
+          <option value="homme">Homme</option>
+          <option value="femme">Femme</option>
+          <option value="non-binaire">Non binaire</option>
+        </select>
+        <input type="email" id="register-email" placeholder="Email">
+        <input type="password" id="register-password" placeholder="Mot de passe">
+        <button id="register-btn">S'inscrire</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>À propos</h2>
+    <p>Ce réseau social permet aux élèves de discuter, partager et collaborer dans un espace sécurisé du collège.</p>
+  </section>
+</main>
+
+<footer>
+  <p>&copy; 2025 GDN-Connect. Tous droits réservés.</p>
+</footer>
+
+<!-- Script principal en module -->
+<script type="module">
+  // Import Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
+import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+// Config Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyAKca0kcjRqGJKkH4PMYIlA_CG29xgCcLA",
+  authDomain: "gdn-connect.firebaseapp.com",
+  databaseURL: "https://gdn-connect-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gdn-connect",
+  storageBucket: "gdn-connect.firebasestorage.app",
+  messagingSenderId: "101766902283",
+  appId: "1:101766902283:web:5d091c5416a4a16f4c4d0e",
+  measurementId: "G-KNQ509LQ6G"
+};
+
+// Initialisation
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+// Connexion
+document.getElementById('login-btn').addEventListener('click', () => {
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-password').value;
+
+  signInWithEmailAndPassword(auth, email, pass)
+    .then((userCredential) => {
+      // Redirection directe vers le chat
+      window.location.href = "chat.html";
+    })
+    .catch((error) => {
+      alert("Erreur de connexion : " + error.message);
+      console.error(error);
+    });
+});
+
+// Inscription
+document.getElementById('register-btn').addEventListener('click', () => {
+  const data = {
+    nom: document.getElementById('register-nom').value,
+    prenom: document.getElementById('register-prenom').value,
+    age: document.getElementById('register-age').value,
+    naissance: document.getElementById('register-naissance').value,
+    classe: document.getElementById('register-classe').value,
+    relation: document.getElementById('register-relation').value,
+    genre: document.getElementById('register-genre').value,
+    email: document.getElementById('register-email').value,
+    // On NE stocke PAS le mot de passe dans la base
+  };
+
+  const password = document.getElementById('register-password').value;
+
+  // Crée le compte Firebase Auth
+  createUserWithEmailAndPassword(auth, data.email, password)
+    .then((userCredential) => {
+      // Enregistre les infos utilisateur dans la DB (sans le mot de passe)
+      const usersRef = ref(db, 'users');
+      const newUserRef = push(usersRef);
+      set(newUserRef, data);
+
+      alert('Compte créé avec succès !');
+      // Redirection immédiate vers le chat
+      window.location.href = "chat.html";
+    })
+    .catch((error) => {
+      console.error(error);
+      alert('Erreur inscription : ' + error.message);
+    });
+});
+
+</script>
+
+</body>
+</html>

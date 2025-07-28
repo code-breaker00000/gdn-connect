@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat – GDN-Connect</title>
+  <style>
+    body {
+      background-color: #333;
+      color: black;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #333;
+      padding: 15px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    header h1 {
+      color: white;
+      font-size: 1.6rem;
+      margin: 0;
+      flex-grow: 1;
+    }
+
+    nav {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    nav a,
+    nav button {
+      background-color: #444;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      display: inline-block;
+      user-select: none;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    nav a:hover,
+    nav button:hover {
+      background-color: #555;
+      color: #ffd700;
+      box-shadow: 0 4px 8px rgba(255, 215, 0, 0.5);
+    }
+
+    @media (max-width: 480px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      nav {
+        margin-top: 10px;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+      }
+
+      nav a {
+        width: 100%;
+        text-align: center;
+      }
+    }
+
+    main {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+      border-radius: 10px;
+      min-height: 70vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #messages {
+      flex: 1;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      padding: 15px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+      font-size: 1rem;
+      color: #222;
+    }
+
+    .message {
+      margin-bottom: 0.8rem;
+      white-space: normal;
+    }
+    .message strong {
+      color: #4267B2;
+      cursor: default;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 3px 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      margin-left: 10px;
+    }
+    .delete-btn:hover {
+      background-color: #b02a37;
+    }
+
+    #chatForm {
+      display: flex;
+      gap: 10px;
+    }
+
+    #messageInput {
+      flex: 1;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border-radius: 25px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    #sendBtn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      padding: 0 25px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #sendBtn:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Chat général – GDN‑Connect</h1>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="chat.html">Chat</a>
+      <a href="friends.html">Amis</a>
+      <a href="blog.html">Blog</a>
+      <a href="profile.html">Profil</a>
+      <a href="admin.html">soutien</a>
+      <button id="logoutBtn">Déconnexion</button>
+    </nav>
+  </header>
+
+  <main>
+    <div id="messages"></div>
+
+    <form id="chatForm">
+      <input type="text" id="messageInput" placeholder="Écris ton message..." autocomplete="off" required />
+      <button type="submit" id="sendBtn">Envoyer</button>
+    </form>
+  </main>
+
+  <!-- Firebase SDK Compat -->
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAKca0kcjRqGJKkH4PMYIlA_CG29xgCcLA",
+      authDomain: "gdn-connect.firebaseapp.com",
+      databaseURL: "https://gdn-connect-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gdn-connect",
+      storageBucket: "gdn-connect.firebasestorage.app",
+      messagingSenderId: "101766902283",
+      appId: "1:101766902283:web:5d091c5416a4a16f4c4d0e",
+      measurementId: "G-KNQ509LQ6G"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    const messagesDiv = document.getElementById("messages");
+    const chatForm = document.getElementById("chatForm");
+    const messageInput = document.getElementById("messageInput");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    let currentUser = null;
+    let usersData = {}; // email → {prenom, id}
+
+    async function loadUsers() {
+      const snapshot = await database.ref('users').get();
+      if (snapshot.exists()) {
+        snapshot.forEach(userSnap => {
+          const userData = userSnap.val();
+          usersData[userData.email] = {
+            prenom: userData.prenom,
+            id: userSnap.key
+          };
+        });
+      }
+    }
+
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        window.location.href = "index.html";
+      } else {
+        currentUser = user;
+        await loadUsers();
+        listenMessages();
+      }
+    });
+
+    function listenMessages() {
+      const messagesRef = database.ref('chat');
+      messagesRef.off();
+      messagesDiv.innerHTML = '';
+
+      messagesRef.on('child_added', snapshot => {
+        const msg = snapshot.val();
+        const key = snapshot.key;
+
+        let userId = null;
+        if (msg.email && usersData[msg.email]) {
+          userId = usersData[msg.email].id;
+        }
+
+        addMessageToDOM(msg.prenom, msg.message, key, userId);
+      });
+
+      messagesRef.on('child_removed', snapshot => {
+        const key = snapshot.key;
+        const messageDiv = document.querySelector(`[data-key="${key}"]`);
+        if (messageDiv) messageDiv.remove();
+      });
+    }
+
+    function addMessageToDOM(prenom, message, key, userId) {
+      const div = document.createElement('div');
+      div.classList.add('message');
+      div.setAttribute('data-key', key);
+
+      let nameHTML = prenom;
+      if (userId) {
+        nameHTML = `<a href="profile.html?id=${userId}" style="color:#4267B2; text-decoration:none;">${prenom}</a>`;
+      }
+
+      let content = `<strong>${nameHTML}</strong> : ${message}`;
+
+      if (currentUser.email === 'holesoan@gmail.com') {
+        content += ` <button class="delete-btn" data-key="${key}">Supprimer</button>`;
+      }
+
+      div.innerHTML = content;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      const deleteBtn = div.querySelector('.delete-btn');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+          const keyToDelete = deleteBtn.getAttribute('data-key');
+          database.ref('chat/' + keyToDelete).remove();
+        });
+      }
+    }
+
+    chatForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      database.ref('chat').push({
+        prenom: currentUser.displayName || currentUser.email.split('@')[0],
+        email: currentUser.email,
+        message: text,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      });
+
+      messageInput.value = '';
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut().then(() => {
+        window.location.href = "index.html";
+      });
+    });
+  </script>
+
+</body>
+</html>

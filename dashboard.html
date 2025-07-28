@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard – GDN-Connect</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Dashboard – GDN-Connect</h1>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="chat.html">Chat</a>
+      <a href="friends.html">Amis</a>
+      <a href="blog.html">Blog</a>
+      <a href="profile.html">Profil</a>
+      <a href="admin.html">soutien</a>
+      <button id="logoutBtn">Déconnexion</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="profile-section">
+      <h2 id="welcomeMsg">a propos <br> le site a etais programmer et creer uniquement grace a code_breaker(soan) et je remercie le college guillaume de normandie de utiliser son nom .
+      </h2>
+      <p>Bienvenue sur les news de <strong>GDN‑Connect</strong> !</p>
+    </section>
+
+    <section class="news-section">
+      <h3>📰 Dernières Nouvelles</h3>
+      <div id="newsList">
+        <p>(Ici tu pourras afficher des nouvelles plus tard)</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 GDN‑Connect. Tous droits réservés.</p>
+  </footer>
+
+  <script>
+    // Gestion simple du bouton déconnexion sans Firebase
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      // Ici tu peux ajouter une logique de déconnexion custom
+      alert("Déconnexion réussie !");
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>

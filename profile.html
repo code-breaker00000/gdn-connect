@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profil Utilisateur – GDN-Connect</title>
+  <style>
+    body {
+      background-color: #333;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .profile-container {
+      background-color: #444;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: 40px auto;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .field {
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+    }
+    .field span {
+      font-weight: bold;
+      color: #ffd700;
+    }
+    .error {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #ff5555;
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="profile-container" id="profile">
+    <h1>Profil utilisateur</h1>
+    <div id="content">
+      Chargement du profil...
+    </div>
+    <a href="chat.html" style="
+  display: inline-block;
+  margin: 15px 0;
+  padding: 10px 20px;
+  background-color: #4267B2;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: background-color 0.3s ease;
+">
+  ← Retour au chat
+</a>
+
+  </div>
+
+
+  <!-- Firebase SDK Compat -->
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAKca0kcjRqGJKkH4PMYIlA_CG29xgCcLA",
+      authDomain: "gdn-connect.firebaseapp.com",
+      databaseURL: "https://gdn-connect-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gdn-connect",
+      storageBucket: "gdn-connect.firebasestorage.app",
+      messagingSenderId: "101766902283",
+      appId: "1:101766902283:web:5d091c5416a4a16f4c4d0e",
+      measurementId: "G-KNQ509LQ6G"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    const database = firebase.database();
+
+    function getUserIdFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    function displayProfile(data) {
+      const container = document.getElementById('content');
+      if (!data) {
+        container.innerHTML = '<p class="error">Profil introuvable.</p>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="field"><span>Prénom :</span> ${data.prenom || 'N/A'}</div>
+        <div class="field"><span>Âge :</span> ${data.age || 'N/A'}</div>
+        <div class="field"><span>Date de naissance :</span> ${data.naissance || 'N/A'}</div>
+        <div class="field"><span>Classe :</span> ${data.classe || 'N/A'}</div>
+        <div class="field"><span>Genre :</span> ${data.genre || 'N/A'}</div>
+        <div class="field"><span>Relation :</span> ${data.relation || 'N/A'}</div>
+      `;
+    }
+
+    async function loadProfile() {
+      const userId = getUserIdFromURL();
+      if (!userId) {
+        displayProfile(null);
+        return;
+      }
+
+      try {
+        const snapshot = await database.ref('users/' + userId).get();
+        if (snapshot.exists()) {
+          displayProfile(snapshot.val());
+        } else {
+          displayProfile(null);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du profil:', error);
+        displayProfile(null);
+      }
+    }
+
+    loadProfile();
+  </script>
+
+</body>
+</html>

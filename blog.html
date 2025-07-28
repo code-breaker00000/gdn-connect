@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blog – GDN‑Connect</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAKca0kcjRqGJKkH4PMYIlA_CG29xgCcLA",
+      authDomain: "gdn-connect.firebaseapp.com",
+      databaseURL: "https://gdn-connect-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gdn-connect",
+      storageBucket: "gdn-connect.appspot.com",
+      messagingSenderId: "101766902283",
+      appId: "1:101766902283:web:5d091c5416a4a16f4c4d0e",
+      measurementId: "G-KNQ509LQ6G"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const postsList = document.getElementById('postsList');
+      const postForm = document.getElementById('postForm');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      postsList.innerHTML = '<p class="loading">Chargement…</p>';
+
+      onAuthStateChanged(auth, user => {
+        if (!user) {
+          window.location.href = "index.html";
+          return;
+        }
+        currentUser = user;
+        loadPosts();
+      });
+
+      if (logoutBtn) {
+        logoutBtn.onclick = () => {
+          signOut(auth).then(() => window.location.href = "index.html");
+        };
+      }
+
+      if (postForm) {
+        postForm.onsubmit = e => {
+          e.preventDefault();
+
+          if (!currentUser) {
+            alert("Tu dois être connecté pour publier.");
+            return;
+          }
+
+          const title = document.getElementById('postTitle').value.trim();
+          const content = document.getElementById('postContent').value.trim();
+
+          if (!title || !content) {
+            alert("Titre et contenu obligatoires.");
+            return;
+          }
+
+          const newPost = {
+            title,
+            content,
+            authorId: currentUser.uid,
+            authorName: currentUser.displayName || currentUser.email || "Anonyme",
+            createdAt: serverTimestamp()
+          };
+
+          push(ref(db, 'posts'), newPost)
+            .then(() => postForm.reset())
+            .catch(err => alert("Erreur lors de la publication : " + err.message));
+        };
+      }
+
+      function loadPosts() {
+        const postsRef = ref(db, 'posts');
+        onValue(postsRef, snapshot => {
+          postsList.innerHTML = '';
+          const data = snapshot.val();
+          if (!data) {
+            postsList.innerHTML = '<p>Aucun article pour l’instant.</p>';
+            return;
+          }
+
+          // Convertir objet en tableau et trier par createdAt (desc)
+          const postsArray = Object.entries(data).sort((a, b) => {
+            const aTime = typeof a[1].createdAt === 'number' ? a[1].createdAt : 0;
+            const bTime = typeof b[1].createdAt === 'number' ? b[1].createdAt : 0;
+            return bTime - aTime;
+          });
+
+          postsArray.forEach(([id, post]) => {
+            let dateStr = "Date inconnue";
+            if (typeof post.createdAt === 'number') {
+              dateStr = new Date(post.createdAt).toLocaleString();
+            }
+
+            const div = document.createElement('div');
+            div.classList.add('post-item');
+            div.innerHTML = `
+              <h4><a href="blog.html?id=${id}">${post.title}</a></h4>
+              <small>par ${post.authorName} le ${dateStr}</small>
+              <p>${post.content ? (post.content.length > 200 ? post.content.substring(0, 200) + '...' : post.content) : ''}</p>
+            `;
+            postsList.appendChild(div);
+          });
+        });
+      }
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1>Blog – GDN‑Connect</h1>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="chat.html">Chat</a>
+      <a href="friends.html">Amis</a>
+      <a href="blog.html">Blog</a>
+      <a href="profile.html">Profil</a>
+      <a href="admin.html">soutien</a>
+      <button id="logoutBtn">Déconnexion</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="blog-posts">
+      <h2>📝 Articles récents</h2>
+      <div id="postsList">Chargement…</div>
+    </section>
+
+    <section class="blog-form">
+      <h3>✍️ Rédiger un article</h3>
+      <form id="postForm">
+        <input type="text" id="postTitle" placeholder="Titre" required /><br />
+        <textarea id="postContent" placeholder="Contenu…" rows="5" required></textarea><br />
+        <button type="submit">Publier</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 GDN‑Connect. Tous droits réservés.</p>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAKca0kcjRqGJKkH4PMYIlA_CG29xgCcLA",
+      authDomain: "gdn-connect.firebaseapp.com",
+      databaseURL: "https://gdn-connect-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gdn-connect",
+      storageBucket: "gdn-connect.appspot.com",
+      messagingSenderId: "101766902283",
+      appId: "1:101766902283:web:5d091c5416a4a16f4c4d0e",
+      measurementId: "G-KNQ509LQ6G"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    async function loadSinglePost(postId) {
+      document.querySelector('main').innerHTML = '<p>Chargement de l’article…</p>';
+      try {
+        const snapshot = await get(ref(db, 'posts/' + postId));
+        const post = snapshot.val();
+        if (!post) {
+          document.querySelector('main').innerHTML = '<p>Article introuvable.</p>';
+          return;
+        }
+        const dateStr = typeof post.createdAt === 'number' ? new Date(post.createdAt).toLocaleString() : "Date inconnue";
+        document.querySelector('main').innerHTML = `
+          <article>
+            <h2>${post.title}</h2>
+            <small>par ${post.authorName} le ${dateStr}</small>
+            <p>${post.content ? post.content.replace(/\n/g, '<br>') : ''}</p>
+            <p><a href="blog.html">← Retour à la liste</a></p>
+          </article>
+        `;
+      } catch(e) {
+        document.querySelector('main').innerHTML = '<p>Erreur de chargement.</p>';
+      }
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const postId = urlParams.get('id');
+    if (postId) {
+      loadSinglePost(postId);
+    }
+  </script>
+</body>
+</html>
