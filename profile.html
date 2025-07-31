@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Profil Utilisateur – GDN-Connect</title>
+  <link rel="icon" type="image/png" href="https://code-breaker00000.github.io/gnd-connect/logo.png">
   <style>
     body {
       background-color: #333;
@@ -12,6 +13,11 @@
       margin: 0;
       padding: 20px;
     }
+    header img {
+    height: 50px; /* taille du logo */
+    margin-right: 10px;
+    }
+
     .profile-container {
       background-color: #444;
       padding: 20px;
@@ -38,6 +44,21 @@
       color: #ff5555;
       margin-top: 50px;
     }
+    a.back-link {
+      display: inline-block;
+      margin: 15px 0;
+      padding: 10px 20px;
+      background-color: #4267B2;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      transition: background-color 0.3s ease;
+    }
+    a.back-link:hover {
+      background-color: #365899;
+    }
   </style>
 </head>
 <body>
@@ -47,26 +68,12 @@
     <div id="content">
       Chargement du profil...
     </div>
-    <a href="chat.html" style="
-  display: inline-block;
-  margin: 15px 0;
-  padding: 10px 20px;
-  background-color: #4267B2;
-  color: white;
-  text-decoration: none;
-  border-radius: 5px;
-  font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-  transition: background-color 0.3s ease;
-">
-  ← Retour au chat
-</a>
-
+    <a href="chat.html" class="back-link">← Retour au chat</a>
   </div>
-
 
   <!-- Firebase SDK Compat -->
   <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-database-compat.js"></script>
 
   <script>

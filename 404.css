@@ -3,6 +3,11 @@
     padding: 0;
 }
 
+header img {
+            height: 50px; /* taille du logo */
+            margin-right: 10px;
+}
+
 html {
     height: 100%;
     overflow: hidden;

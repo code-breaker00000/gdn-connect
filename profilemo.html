@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profil – GDN‑Connect</title>
+  <link rel="icon" type="image/png" href="https://code-breaker00000.github.io/gnd-connect/logo.png">
+  <style>
+    /* Garde ton style global + focus sur la section profil */
+    body {
+      background-color: #333;
+      color: black;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #333;
+      padding: 15px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    header h1 {
+      color: white;
+      font-size: 1.6rem;
+      margin: 0;
+      flex-grow: 1;
+    }
+
+    nav {
+      display: flex;
+      gap: 15px;
+    }
+
+    nav a,
+    nav button {
+      background-color: #444;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      display: inline-block;
+      user-select: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    nav a:hover,
+    nav button:hover {
+      background-color: #555;
+      color: #ffd700;
+    }
+
+    main {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+      border-radius: 10px;
+      min-height: 70vh;
+    }
+
+    .profile-section {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      text-align: left;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .edit-profile {
+      margin-top: 20px;
+      background: #f9f9f9;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.05);
+    }
+
+    .edit-profile label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .edit-profile input,
+    .edit-profile select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    .edit-profile button {
+      padding: 10px 15px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin-top: 15px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: bold;
+    }
+
+    .edit-profile button:hover {
+      background: #0056b3;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="https://code-breaker00000.github.io/gnd-connect/logo.png" alt="Logo" style="height:50px;margin-right:10px;">
+  <h1>Profil – GDN‑Connect</h1>
+  <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="chat.html">Chat</a>
+    <a href="chatpv.html">Privé</a>
+    <a href="blog.html">Blog</a>
+    <a href="profile.html">Profil</a>
+    <a href="admin.html">Soutien</a>
+    <button id="logoutBtn">Déconnexion</button>
+  </nav>
+</header>
+
+<main>
+  <div class="profile-section">
+    <h2>Mon Profil</h2>
+    <p><strong>Prénom :</strong> <span id="prenom"></span></p>
+    <p><strong>Âge :</strong> <span id="age"></span></p>
+    <p><strong>Date de naissance :</strong> <span id="naissance"></span></p>
+    <p><strong>Classe :</strong> <span id="classe"></span></p>
+    <p><strong>Genre :</strong> <span id="genre"></span></p>
+    <p><strong>Relation :</strong> <span id="relation"></span></p>
+  </div>
+
+  <div class="edit-profile">
+    <h3>Modifier mon profil</h3>
+    <label>Âge :</label>
+    <input type="number" id="editAge" />
+
+    <label>Classe :</label>
+    <input type="text" id="editClasse" />
+
+    <label>Genre :</label>
+    <select id="editGenre">
+      <option value="homme">Homme</option>
+      <option value="femme">Femme</option>
+      <option value="autre">Autre</option>
+    </select>
+
+    <label>Relation :</label>
+    <select id="editRelation">
+      <option value="celibataire">Célibataire</option>
+      <option value="en couple">En couple</option>
+    </select>
+
+    <button id="saveBtn">Sauvegarder</button>
+    <div id="status" class="status"></div>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAKca0kcjRqGJKkH4PMYIlA_CG29xgCcLA",
+  authDomain: "gdn-connect.firebaseapp.com",
+  databaseURL: "https://gdn-connect-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gdn-connect",
+  storageBucket: "gdn-connect.firebasestorage.app",
+  messagingSenderId: "101766902283",
+  appId: "1:101766902283:web:5d091c5416a4a16f4c4d0e",
+  measurementId: "G-KNQ509LQ6G"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const database = firebase.database();
+
+const prenomSpan = document.getElementById('prenom');
+const ageSpan = document.getElementById('age');
+const naissanceSpan = document.getElementById('naissance');
+const classeSpan = document.getElementById('classe');
+const genreSpan = document.getElementById('genre');
+const relationSpan = document.getElementById('relation');
+
+const editAge = document.getElementById('editAge');
+const editClasse = document.getElementById('editClasse');
+const editGenre = document.getElementById('editGenre');
+const editRelation = document.getElementById('editRelation');
+const saveBtn = document.getElementById('saveBtn');
+const statusDiv = document.getElementById('status');
+
+let currentUserId = null;
+
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "index.html";
+  } else {
+    // Récupérer les données de l'utilisateur connecté
+    database.ref('users').orderByChild('email').equalTo(user.email).once('value', snapshot => {
+      snapshot.forEach(child => {
+        currentUserId = child.key;
+        const data = child.val();
+        afficherProfil(data);
+      });
+    });
+  }
+});
+
+function afficherProfil(data) {
+  prenomSpan.textContent = data.prenom || '';
+  ageSpan.textContent = data.age || '';
+  naissanceSpan.textContent = data.naissance || '';
+  classeSpan.textContent = data.classe || '';
+  genreSpan.textContent = data.genre || '';
+  relationSpan.textContent = data.relation || '';
+
+  editAge.value = data.age || '';
+  editClasse.value = data.classe || '';
+  editGenre.value = data.genre || 'homme';
+  editRelation.value = data.relation || 'celibataire';
+}
+
+saveBtn.addEventListener('click', () => {
+  if (!currentUserId) return;
+
+  const updates = {
+    age: editAge.value,
+    classe: editClasse.value,
+    genre: editGenre.value,
+    relation: editRelation.value
+  };
+
+  database.ref('users/' + currentUserId).update(updates)
+    .then(() => {
+      statusDiv.textContent = "Profil mis à jour avec succès.";
+      classeSpan.textContent = updates.classe;
+      relationSpan.textContent = updates.relation;
+      genreSpan.textContent = updates.genre;
+      ageSpan.textContent = updates.age;
+    })
+    .catch(err => {
+      statusDiv.textContent = "Erreur : " + err.message;
+    });
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  auth.signOut().then(() => {
+    window.location.href = "index.html";
+  });
+});
+</script>
+
+</body>
+</html>
